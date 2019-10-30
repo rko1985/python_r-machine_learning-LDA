@@ -7,37 +7,38 @@ dataset = read.csv('Wine.csv')
 # install.packages('caTools')
 library(caTools)
 set.seed(123)
-split = sample.split(dataset$Customer_Segment, SplitRatio = 0.8)
+split = sample.split(dataset$Customer_Segment, SplitRatio = 0.80)
 training_set = subset(dataset, split == TRUE)
 test_set = subset(dataset, split == FALSE)
 
-# Feature Scaling
-training_set[-14] = scale(training_set[-14])
-test_set[-14] = scale(test_set[-14])
+#Feature Scaling
+training_set[,-14] = scale(training_set[,-14])
+test_set[,-14] = scale(test_set[,-14])
 
 # Applying LDA
 library(MASS)
 lda = lda(formula = Customer_Segment ~ ., data = training_set)
 training_set = as.data.frame(predict(lda, training_set))
-training_set = training_set[c(5, 6, 1)]
+training_set = training_set[c(5,6,1)]
 test_set = as.data.frame(predict(lda, test_set))
-test_set = test_set[c(5, 6, 1)]
+test_set = test_set[c(5,6,1)]
 
-# Fitting SVM to the Training set
-# install.packages('e1071')
+#Fitting Classifier to the Training set
+#install.packages('e1071')
 library(e1071)
 classifier = svm(formula = class ~ .,
                  data = training_set,
                  type = 'C-classification',
-                 kernel = 'linear')
+                 kernal = 'radial')
 
-# Predicting the Test set results
+#Predicting the test set results
 y_pred = predict(classifier, newdata = test_set[-3])
 
-# Making the Confusion Matrix
+#Making the Confusion Matrix
 cm = table(test_set[, 3], y_pred)
 
 # Visualising the Training set results
+#install.packages('ElemStatLearn')
 library(ElemStatLearn)
 set = training_set
 X1 = seq(min(set[, 1]) - 1, max(set[, 1]) + 1, by = 0.01)
@@ -46,7 +47,7 @@ grid_set = expand.grid(X1, X2)
 colnames(grid_set) = c('x.LD1', 'x.LD2')
 y_grid = predict(classifier, newdata = grid_set)
 plot(set[, -3],
-     main = 'SVM (Training set)',
+     main = 'Kernel SVM (Training set)',
      xlab = 'LD1', ylab = 'LD2',
      xlim = range(X1), ylim = range(X2))
 contour(X1, X2, matrix(as.numeric(y_grid), length(X1), length(X2)), add = TRUE)
@@ -61,7 +62,8 @@ X2 = seq(min(set[, 2]) - 1, max(set[, 2]) + 1, by = 0.01)
 grid_set = expand.grid(X1, X2)
 colnames(grid_set) = c('x.LD1', 'x.LD2')
 y_grid = predict(classifier, newdata = grid_set)
-plot(set[, -3], main = 'SVM (Test set)',
+plot(set[, -3],
+     main = 'Kernel SVM (Test set)',
      xlab = 'LD1', ylab = 'LD2',
      xlim = range(X1), ylim = range(X2))
 contour(X1, X2, matrix(as.numeric(y_grid), length(X1), length(X2)), add = TRUE)
